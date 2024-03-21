@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Orders</title>
+  <style>
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+  </style>
+</head>
+<body>
+  <h1>Orders</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>Order ID</th>
+        <th>Customer Name</th>
+        <th>Total Price</th>
+        <th>Items</th>
+      </tr>
+    </thead>
+    <tbody id="order-table-body">
+      <!-- Orders will be dynamically inserted here -->
+    </tbody>
+  </table>
+
+  <script>
+    // Fetch menu items from backend API
+    fetch('http://localhost:1337/menu')
+      .then(response => response.json())
+      .then(menuItems => {
+        // Create a map of menu items for easy lookup
+        const menuMap = {};
+        menuItems.forEach(item => {
+          menuMap[item.menuId] = item.itemName;
+        });
+
+        // Fetch orders from backend API
+        fetch('http://localhost:1337/orders')
+          .then(response => response.json())
+          .then(data => {
+            const orderTableBody = document.getElementById('order-table-body');
+            data.forEach(order => {
+              const row = document.createElement('tr');
+              row.innerHTML = `
+                <td>${order.orderId}</td>
+                <td>${order.customerName}</td>
+                <td>$${order.totalPrice}</td>
+                <td>${formatItems(JSON.parse(order.items), menuMap)}</td> <!-- Display items -->
+              `;
+              orderTableBody.appendChild(row);
+            });
+          })
+          .catch(error => console.error('Error fetching orders:', error));
+      })
+      .catch(error => console.error('Error fetching menu:', error));
+
+    // Helper function to format items
+    function formatItems(items, menuMap) {
+    if (!Array.isArray(items)) return ''; // Check if items is an array
+    return items.map(item => `${menuMap[item.menuId]}: ${item.quantity}`).join(', ');
+    }
+  </script>
+</body>
+</html>
